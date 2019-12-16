@@ -1,0 +1,166 @@
+---
+title: "Ruth EDA Project"
+author: "Ruth Blaker"
+date: "10/21/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+For this exploratory data analysis project, I chose two datasets giving data from each of the US states. One had data of arrests for rape, assult, and murder per 100,000 people in each state, along with the percent of the population from urban areas per state. The other data set gives actual population count, percent illiterate, avg life expectancy, murder rate per 100,000 (removed), percent high school graduates, avg number of days freezing temp (removed), and state area.
+
+The arrests data are from 1973 and the state.x77 data are from various years between 1969 and 1976, so I thought the data would be related and interesting to compare to determine relationships. I would expect to see correlation relationships between some socioeconomic factors of a state and their crime rate
+
+
+
+
+```{R, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(cluster)
+library(tidyr)
+??USArrests
+??state.x77
+```
+
+##Call on data
+
+```{R}
+statedf<-as.data.frame(state.x77)
+arrests <- USArrests
+```
+
+Remove Murders from statedf so there aren't conflicting data
+
+```{R}
+statedata <-statedf%>%select(-Murder)
+```
+
+Create a column from row names so the datasets have common variable
+```{R}
+statedata<-cbind(state.names=rownames(statedata),statedata)
+arrests<-cbind(state.names=rownames(arrests),arrests)
+```
+
+##Time to Join!
+
+```{R}
+fullstate<-full_join(statedata,arrests,by="state.names")
+glimpse(fullstate)
+```
+No cases were dropped, full_join for this data has same output as inner_join or left_join because there are no states in either dataset that aren't in the other. This merges all the data for each state from one dataset with the data for each state from the other dataset. No data lost. 
+
+##Using dplyr functions to manipulate and explore!
+Remove frost data because it has very different year range than the rest of the data and because it's boring
+```{R}
+fullstate<- fullstate%>%select(-Frost)
+```
+
+Rename HS Grad to Gradrate
+```{R}
+fullstate<-fullstate%>%rename(Gradrate = c(6))
+```
+
+Return data for states with percent urban population between 50% and 70%
+```{R}
+popstate <-fullstate%>%filter(UrbanPop>50 & UrbanPop<70)
+```
+
+View states in order of highest to lowest murder arrests per 100,000 people
+```{R}
+murdat<-fullstate%>%arrange(desc(fullstate$Murder))
+glimpse(murdat)
+```
+
+Create new column for total arrests per state, made by adding arrests for murder, assault, and rape
+```{R}
+fullstate <-fullstate%>%mutate(totarrests= Murder + Assault + Rape)
+glimpse(fullstate)
+```
+
+Find average state population in US
+```{R}
+fullstate%>%summarise(mean(Population, na.rm = T))
+```
+
+Make a new categorical variable of levels of total crime "heavy crime", "medium crime", "light crime"
+```{R}
+fullstate<- fullstate%>%mutate(crimerate= case_when(totarrests<100~"light crime", totarrests>100 & totarrests<200~ "medium crime", totarrests>200~"heavy crime"))
+glimpse(fullstate)
+```
+
+##Summary Statistics!!
+
+Create a category variable from Area with levels "small", "medium", "big"
+```{R}
+fullstate <-fullstate%>%mutate(factarea= case_when(Area<25000~"small",Area>25000 & Area<80000~"medium",Area>80000~"big"))
+glimpse(fullstate)
+```
+
+##Create summary statistics for each numeric variable before and after grouping by category
+
+mean and standard deviation for each numeric variable
+```{R}
+fullstate%>%summarise_if(is.numeric, list(mean=mean, sd=sd), na.rm=T)
+```
+
+Min max and median for each numeric variable
+```{R}
+fullstate%>%summarise_if(is.numeric, list(min=min, median=median, max=max), na.rm=T)
+```
+
+Mean and standard deviation after grouping
+```{R}
+fullstate%>%group_by(factarea)%>%summarise_if(is.numeric, list(mean=mean, sd=sd), na.rm=T)
+```
+
+Min max and median after grouping
+```{R}
+fullstate%>%group_by(factarea)%>%summarise_if(is.numeric, list(min=min, median=median, max=max), na.rm=T)
+```
+
+Correlation matrix between numeric variables
+```{R}
+corstate<- fullstate%>%select_if(is.numeric)
+cor(corstate)
+```
+
+Correlation matrix between select numeric variables (socioeconomic factors and arrests)
+```{R}
+corstate2 <- fullstate%>%na.omit%>%select(Income, Illiteracy, UrbanPop, Murder, Assault, Rape)
+cor(corstate2)
+```
+
+##Create Data Visualisations
+
+```{R}
+fullstate%>%ggplot(aes(x=Income, y= Gradrate, fill=factarea))+
+  geom_point(aes(color=factarea))+ 
+  labs(title="High School Graduation Rate by Income and State Size", x= "Average Income", y="Percent Population Graduated from High School")+
+  scale_x_continuous(breaks = c(3000,3500,4000,4500,5000,5500,6000,6500))+theme_minimal()
+```
+
+Scatterplot displaying relationship between high school graduation rate and average income per state by size.Color of points represents size of state (categories derived from state area numeric variable). High school graduation rate and average income per state are positively correlated, states with a larger area typically had higher graduation rate and average income, states with 'medium' area had the most variability in graduation rate and average income.
+
+```{R}
+fullstate%>%ggplot(aes(x=Population, y=totarrests))+
+  geom_point(stat="summary",fun.data="mean_se", aes(color=factarea, shape=crimerate))+ 
+  labs(title = "Total Arrests by Population Size", x= "State Population", y="Total Arrests")+
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+Scatterplot displaying relationship between total arrests and population size, color of points represents state area size and Shape of points represents crime rate. Weak positive correlation between state population and crime rate, population data is right skewed. No clear relationship between state area size and crime rate. Unfortunately not a very telling correlation, though there is a trend for states with large area to have larger median arrest rate than medium or small area states, even when the population numbers are comparable.
+
+##Clustering!
+
+```{R}
+pamstate<-corstate%>%pam(k=3)
+statepam <- corstate%>%mutate(cluster=as.factor(pamstate$clustering))
+statepam%>%ggplot(aes(Area,Population, color=cluster ))+geom_point()
+```
+
+Scatterplot of state population as a function of area. The PAM clusters distinctify the states' data vertically (by area). The data for Alaska is in its own cluster because it is an extreme outlier in area, especially because its population is so low. Even when increasing the number of PAM clusters, Alaska stays in its own cluster. 

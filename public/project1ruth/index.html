@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Ruth Blaker" />
+    <meta name="description" content="I&#39;m Ruth Blaker, a senior at the University of Texas at Austin. Have a look at some of my statistical projects or check out my resume!">
+    <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>Ruth EDA Project</title>
+    <meta name="generator" content="Hugo 0.61.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="/blog/">BLOG</a></li>
+        
+        <li><a href="/projects/">PROJECTS</a></li>
+        
+        <li><a href="BlakerRuthResume2019.pdf">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="/project1ruth/">Ruth EDA Project</a></strong>
+          </h3>
+        </div>
+        <div class="blog-title">
+          <h4>
+          January 1, 0001
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<p>For this exploratory data analysis project, I chose two datasets giving data from each of the US states. One had data of arrests for rape, assult, and murder per 100,000 people in each state, along with the percent of the population from urban areas per state. The other data set gives actual population count, percent illiterate, avg life expectancy, murder rate per 100,000 (removed), percent high school graduates, avg number of days freezing temp (removed), and state area.</p>
+<p>The arrests data are from 1973 and the state.x77 data are from various years between 1969 and 1976, so I thought the data would be related and interesting to compare to determine relationships. I would expect to see correlation relationships between some socioeconomic factors of a state and their crime rate</p>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<p>##Call on data</p>
+<pre class="r"><code>statedf&lt;-as.data.frame(state.x77)
+arrests &lt;- USArrests</code></pre>
+<p>Remove Murders from statedf so there aren’t conflicting data</p>
+<pre class="r"><code>statedata &lt;-statedf%&gt;%select(-Murder)</code></pre>
+<p>Create a column from row names so the datasets have common variable</p>
+<pre class="r"><code>statedata&lt;-cbind(state.names=rownames(statedata),statedata)
+arrests&lt;-cbind(state.names=rownames(arrests),arrests)</code></pre>
+<p>##Time to Join!</p>
+<pre class="r"><code>fullstate&lt;-full_join(statedata,arrests,by=&quot;state.names&quot;)
+glimpse(fullstate)</code></pre>
+<pre><code>## Observations: 50
+## Variables: 12
+## $ state.names &lt;fct&gt; Alabama, Alaska, Arizona, Arkansas, California, Colo…
+## $ Population  &lt;dbl&gt; 3615, 365, 2212, 2110, 21198, 2541, 3100, 579, 8277,…
+## $ Income      &lt;dbl&gt; 3624, 6315, 4530, 3378, 5114, 4884, 5348, 4809, 4815…
+## $ Illiteracy  &lt;dbl&gt; 2.1, 1.5, 1.8, 1.9, 1.1, 0.7, 1.1, 0.9, 1.3, 2.0, 1.…
+## $ `Life Exp`  &lt;dbl&gt; 69.05, 69.31, 70.55, 70.66, 71.71, 72.06, 72.48, 70.…
+## $ `HS Grad`   &lt;dbl&gt; 41.3, 66.7, 58.1, 39.9, 62.6, 63.9, 56.0, 54.6, 52.6…
+## $ Frost       &lt;dbl&gt; 20, 152, 15, 65, 20, 166, 139, 103, 11, 60, 0, 126, …
+## $ Area        &lt;dbl&gt; 50708, 566432, 113417, 51945, 156361, 103766, 4862, …
+## $ Murder      &lt;dbl&gt; 13.2, 10.0, 8.1, 8.8, 9.0, 7.9, 3.3, 5.9, 15.4, 17.4…
+## $ Assault     &lt;int&gt; 236, 263, 294, 190, 276, 204, 110, 238, 335, 211, 46…
+## $ UrbanPop    &lt;int&gt; 58, 48, 80, 50, 91, 78, 77, 72, 80, 60, 83, 54, 83, …
+## $ Rape        &lt;dbl&gt; 21.2, 44.5, 31.0, 19.5, 40.6, 38.7, 11.1, 15.8, 31.9…</code></pre>
+<p>No cases were dropped, full_join for this data has same output as inner_join or left_join because there are no states in either dataset that aren’t in the other. This merges all the data for each state from one dataset with the data for each state from the other dataset. No data lost.</p>
+<p>##Using dplyr functions to manipulate and explore!
+Remove frost data because it has very different year range than the rest of the data and because it’s boring</p>
+<pre class="r"><code>fullstate&lt;- fullstate%&gt;%select(-Frost)</code></pre>
+<p>Rename HS Grad to Gradrate</p>
+<pre class="r"><code>fullstate&lt;-fullstate%&gt;%rename(Gradrate = c(6))</code></pre>
+<p>Return data for states with percent urban population between 50% and 70%</p>
+<pre class="r"><code>popstate &lt;-fullstate%&gt;%filter(UrbanPop&gt;50 &amp; UrbanPop&lt;70)</code></pre>
+<p>View states in order of highest to lowest murder arrests per 100,000 people</p>
+<pre class="r"><code>murdat&lt;-fullstate%&gt;%arrange(desc(fullstate$Murder))
+glimpse(murdat)</code></pre>
+<pre><code>## Observations: 50
+## Variables: 11
+## $ state.names &lt;fct&gt; Georgia, Mississippi, Florida, Louisiana, South Caro…
+## $ Population  &lt;dbl&gt; 4931, 2341, 8277, 3806, 2816, 3615, 4173, 5441, 1223…
+## $ Income      &lt;dbl&gt; 4091, 3098, 4815, 3545, 3635, 3624, 3821, 3875, 4188…
+## $ Illiteracy  &lt;dbl&gt; 2.0, 2.4, 1.3, 2.8, 2.3, 2.1, 1.7, 1.8, 2.2, 0.5, 0.…
+## $ `Life Exp`  &lt;dbl&gt; 68.54, 68.09, 70.66, 68.76, 67.96, 69.05, 70.11, 69.…
+## $ Gradrate    &lt;dbl&gt; 40.6, 41.0, 52.6, 42.2, 37.8, 41.3, 41.8, 38.5, 47.4…
+## $ Area        &lt;dbl&gt; 58073, 47296, 54090, 44930, 30225, 50708, 41328, 487…
+## $ Murder      &lt;dbl&gt; 17.4, 16.1, 15.4, 15.4, 14.4, 13.2, 13.2, 13.0, 12.7…
+## $ Assault     &lt;int&gt; 211, 259, 335, 249, 279, 236, 188, 337, 201, 252, 25…
+## $ UrbanPop    &lt;int&gt; 60, 44, 80, 66, 48, 58, 59, 45, 80, 81, 74, 70, 67, …
+## $ Rape        &lt;dbl&gt; 25.8, 17.1, 31.9, 22.2, 22.5, 21.2, 26.9, 16.1, 25.5…</code></pre>
+<p>Create new column for total arrests per state, made by adding arrests for murder, assault, and rape</p>
+<pre class="r"><code>fullstate &lt;-fullstate%&gt;%mutate(totarrests= Murder + Assault + Rape)
+glimpse(fullstate)</code></pre>
+<pre><code>## Observations: 50
+## Variables: 12
+## $ state.names &lt;fct&gt; Alabama, Alaska, Arizona, Arkansas, California, Colo…
+## $ Population  &lt;dbl&gt; 3615, 365, 2212, 2110, 21198, 2541, 3100, 579, 8277,…
+## $ Income      &lt;dbl&gt; 3624, 6315, 4530, 3378, 5114, 4884, 5348, 4809, 4815…
+## $ Illiteracy  &lt;dbl&gt; 2.1, 1.5, 1.8, 1.9, 1.1, 0.7, 1.1, 0.9, 1.3, 2.0, 1.…
+## $ `Life Exp`  &lt;dbl&gt; 69.05, 69.31, 70.55, 70.66, 71.71, 72.06, 72.48, 70.…
+## $ Gradrate    &lt;dbl&gt; 41.3, 66.7, 58.1, 39.9, 62.6, 63.9, 56.0, 54.6, 52.6…
+## $ Area        &lt;dbl&gt; 50708, 566432, 113417, 51945, 156361, 103766, 4862, …
+## $ Murder      &lt;dbl&gt; 13.2, 10.0, 8.1, 8.8, 9.0, 7.9, 3.3, 5.9, 15.4, 17.4…
+## $ Assault     &lt;int&gt; 236, 263, 294, 190, 276, 204, 110, 238, 335, 211, 46…
+## $ UrbanPop    &lt;int&gt; 58, 48, 80, 50, 91, 78, 77, 72, 80, 60, 83, 54, 83, …
+## $ Rape        &lt;dbl&gt; 21.2, 44.5, 31.0, 19.5, 40.6, 38.7, 11.1, 15.8, 31.9…
+## $ totarrests  &lt;dbl&gt; 270.4, 317.5, 333.1, 218.3, 325.6, 250.6, 124.4, 259…</code></pre>
+<p>Find average state population in US</p>
+<pre class="r"><code>fullstate%&gt;%summarise(mean(Population, na.rm = T))</code></pre>
+<pre><code>##   mean(Population, na.rm = T)
+## 1                     4246.42</code></pre>
+<p>Make a new categorical variable of levels of total crime “heavy crime”, “medium crime”, “light crime”</p>
+<pre class="r"><code>fullstate&lt;- fullstate%&gt;%mutate(crimerate= case_when(totarrests&lt;100~&quot;light crime&quot;, totarrests&gt;100 &amp; totarrests&lt;200~ &quot;medium crime&quot;, totarrests&gt;200~&quot;heavy crime&quot;))
+glimpse(fullstate)</code></pre>
+<pre><code>## Observations: 50
+## Variables: 13
+## $ state.names &lt;fct&gt; Alabama, Alaska, Arizona, Arkansas, California, Colo…
+## $ Population  &lt;dbl&gt; 3615, 365, 2212, 2110, 21198, 2541, 3100, 579, 8277,…
+## $ Income      &lt;dbl&gt; 3624, 6315, 4530, 3378, 5114, 4884, 5348, 4809, 4815…
+## $ Illiteracy  &lt;dbl&gt; 2.1, 1.5, 1.8, 1.9, 1.1, 0.7, 1.1, 0.9, 1.3, 2.0, 1.…
+## $ `Life Exp`  &lt;dbl&gt; 69.05, 69.31, 70.55, 70.66, 71.71, 72.06, 72.48, 70.…
+## $ Gradrate    &lt;dbl&gt; 41.3, 66.7, 58.1, 39.9, 62.6, 63.9, 56.0, 54.6, 52.6…
+## $ Area        &lt;dbl&gt; 50708, 566432, 113417, 51945, 156361, 103766, 4862, …
+## $ Murder      &lt;dbl&gt; 13.2, 10.0, 8.1, 8.8, 9.0, 7.9, 3.3, 5.9, 15.4, 17.4…
+## $ Assault     &lt;int&gt; 236, 263, 294, 190, 276, 204, 110, 238, 335, 211, 46…
+## $ UrbanPop    &lt;int&gt; 58, 48, 80, 50, 91, 78, 77, 72, 80, 60, 83, 54, 83, …
+## $ Rape        &lt;dbl&gt; 21.2, 44.5, 31.0, 19.5, 40.6, 38.7, 11.1, 15.8, 31.9…
+## $ totarrests  &lt;dbl&gt; 270.4, 317.5, 333.1, 218.3, 325.6, 250.6, 124.4, 259…
+## $ crimerate   &lt;chr&gt; &quot;heavy crime&quot;, &quot;heavy crime&quot;, &quot;heavy crime&quot;, &quot;heavy …</code></pre>
+<p>##Summary Statistics!!</p>
+<p>Create a category variable from Area with levels “small”, “medium”, “big”</p>
+<pre class="r"><code>fullstate &lt;-fullstate%&gt;%mutate(factarea= case_when(Area&lt;25000~&quot;small&quot;,Area&gt;25000 &amp; Area&lt;80000~&quot;medium&quot;,Area&gt;80000~&quot;big&quot;))
+glimpse(fullstate)</code></pre>
+<pre><code>## Observations: 50
+## Variables: 14
+## $ state.names &lt;fct&gt; Alabama, Alaska, Arizona, Arkansas, California, Colo…
+## $ Population  &lt;dbl&gt; 3615, 365, 2212, 2110, 21198, 2541, 3100, 579, 8277,…
+## $ Income      &lt;dbl&gt; 3624, 6315, 4530, 3378, 5114, 4884, 5348, 4809, 4815…
+## $ Illiteracy  &lt;dbl&gt; 2.1, 1.5, 1.8, 1.9, 1.1, 0.7, 1.1, 0.9, 1.3, 2.0, 1.…
+## $ `Life Exp`  &lt;dbl&gt; 69.05, 69.31, 70.55, 70.66, 71.71, 72.06, 72.48, 70.…
+## $ Gradrate    &lt;dbl&gt; 41.3, 66.7, 58.1, 39.9, 62.6, 63.9, 56.0, 54.6, 52.6…
+## $ Area        &lt;dbl&gt; 50708, 566432, 113417, 51945, 156361, 103766, 4862, …
+## $ Murder      &lt;dbl&gt; 13.2, 10.0, 8.1, 8.8, 9.0, 7.9, 3.3, 5.9, 15.4, 17.4…
+## $ Assault     &lt;int&gt; 236, 263, 294, 190, 276, 204, 110, 238, 335, 211, 46…
+## $ UrbanPop    &lt;int&gt; 58, 48, 80, 50, 91, 78, 77, 72, 80, 60, 83, 54, 83, …
+## $ Rape        &lt;dbl&gt; 21.2, 44.5, 31.0, 19.5, 40.6, 38.7, 11.1, 15.8, 31.9…
+## $ totarrests  &lt;dbl&gt; 270.4, 317.5, 333.1, 218.3, 325.6, 250.6, 124.4, 259…
+## $ crimerate   &lt;chr&gt; &quot;heavy crime&quot;, &quot;heavy crime&quot;, &quot;heavy crime&quot;, &quot;heavy …
+## $ factarea    &lt;chr&gt; &quot;medium&quot;, &quot;big&quot;, &quot;big&quot;, &quot;medium&quot;, &quot;big&quot;, &quot;big&quot;, &quot;sma…</code></pre>
+<p>##Create summary statistics for each numeric variable before and after grouping by category</p>
+<p>mean and standard deviation for each numeric variable</p>
+<pre class="r"><code>fullstate%&gt;%summarise_if(is.numeric, list(mean=mean, sd=sd), na.rm=T)</code></pre>
+<pre><code>##   Population_mean Income_mean Illiteracy_mean Life Exp_mean Gradrate_mean
+## 1         4246.42      4435.8            1.17       70.8786        53.108
+##   Area_mean Murder_mean Assault_mean UrbanPop_mean Rape_mean
+## 1  70735.88       7.788       170.76         65.54    21.232
+##   totarrests_mean Population_sd Income_sd Illiteracy_sd Life Exp_sd
+## 1          199.78      4464.491  614.4699     0.6095331    1.342394
+##   Gradrate_sd Area_sd Murder_sd Assault_sd UrbanPop_sd  Rape_sd
+## 1    8.076998 85327.3   4.35551   83.33766    14.47476 9.366385
+##   totarrests_sd
+## 1      93.37297</code></pre>
+<p>Min max and median for each numeric variable</p>
+<pre class="r"><code>fullstate%&gt;%summarise_if(is.numeric, list(min=min, median=median, max=max), na.rm=T)</code></pre>
+<pre><code>##   Population_min Income_min Illiteracy_min Life Exp_min Gradrate_min
+## 1            365       3098            0.5        67.96         37.8
+##   Area_min Murder_min Assault_min UrbanPop_min Rape_min totarrests_min
+## 1     1049        0.8          45           32      7.3           53.1
+##   Population_median Income_median Illiteracy_median Life Exp_median
+## 1            2838.5          4519              0.95          70.675
+##   Gradrate_median Area_median Murder_median Assault_median UrbanPop_median
+## 1           53.25       54277          7.25            159              66
+##   Rape_median totarrests_median Population_max Income_max Illiteracy_max
+## 1        20.1             185.2          21198       6315            2.8
+##   Life Exp_max Gradrate_max Area_max Murder_max Assault_max UrbanPop_max
+## 1         73.6         67.3   566432       17.4         337           91
+##   Rape_max totarrests_max
+## 1       46          382.3</code></pre>
+<p>Mean and standard deviation after grouping</p>
+<pre class="r"><code>fullstate%&gt;%group_by(factarea)%&gt;%summarise_if(is.numeric, list(mean=mean, sd=sd), na.rm=T)</code></pre>
+<pre><code>## # A tibble: 3 x 23
+##   factarea Population_mean Income_mean Illiteracy_mean `Life Exp_mean`
+##   &lt;chr&gt;              &lt;dbl&gt;       &lt;dbl&gt;           &lt;dbl&gt;           &lt;dbl&gt;
+## 1 big                3691.       4628             1.05            71.1
+## 2 medium             5130.       4254.            1.26            70.6
+## 3 small              2583        4677.            1.1             71.3
+## # … with 18 more variables: Gradrate_mean &lt;dbl&gt;, Area_mean &lt;dbl&gt;,
+## #   Murder_mean &lt;dbl&gt;, Assault_mean &lt;dbl&gt;, UrbanPop_mean &lt;dbl&gt;,
+## #   Rape_mean &lt;dbl&gt;, totarrests_mean &lt;dbl&gt;, Population_sd &lt;dbl&gt;,
+## #   Income_sd &lt;dbl&gt;, Illiteracy_sd &lt;dbl&gt;, `Life Exp_sd` &lt;dbl&gt;,
+## #   Gradrate_sd &lt;dbl&gt;, Area_sd &lt;dbl&gt;, Murder_sd &lt;dbl&gt;, Assault_sd &lt;dbl&gt;,
+## #   UrbanPop_sd &lt;dbl&gt;, Rape_sd &lt;dbl&gt;, totarrests_sd &lt;dbl&gt;</code></pre>
+<p>Min max and median after grouping</p>
+<pre class="r"><code>fullstate%&gt;%group_by(factarea)%&gt;%summarise_if(is.numeric, list(min=min, median=median, max=max), na.rm=T)</code></pre>
+<pre><code>## # A tibble: 3 x 34
+##   factarea Population_min Income_min Illiteracy_min `Life Exp_min`
+##   &lt;chr&gt;             &lt;dbl&gt;      &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;
+## 1 big                 365       3601            0.5           69.0
+## 2 medium              637       3098            0.5           68.0
+## 3 small               472       3617            0.6           69.5
+## # … with 29 more variables: Gradrate_min &lt;dbl&gt;, Area_min &lt;dbl&gt;,
+## #   Murder_min &lt;dbl&gt;, Assault_min &lt;int&gt;, UrbanPop_min &lt;int&gt;,
+## #   Rape_min &lt;dbl&gt;, totarrests_min &lt;dbl&gt;, Population_median &lt;dbl&gt;,
+## #   Income_median &lt;dbl&gt;, Illiteracy_median &lt;dbl&gt;, `Life Exp_median` &lt;dbl&gt;,
+## #   Gradrate_median &lt;dbl&gt;, Area_median &lt;dbl&gt;, Murder_median &lt;dbl&gt;,
+## #   Assault_median &lt;dbl&gt;, UrbanPop_median &lt;dbl&gt;, Rape_median &lt;dbl&gt;,
+## #   totarrests_median &lt;dbl&gt;, Population_max &lt;dbl&gt;, Income_max &lt;dbl&gt;,
+## #   Illiteracy_max &lt;dbl&gt;, `Life Exp_max` &lt;dbl&gt;, Gradrate_max &lt;dbl&gt;,
+## #   Area_max &lt;dbl&gt;, Murder_max &lt;dbl&gt;, Assault_max &lt;int&gt;,
+## #   UrbanPop_max &lt;int&gt;, Rape_max &lt;dbl&gt;, totarrests_max &lt;dbl&gt;</code></pre>
+<p>Correlation matrix between numeric variables</p>
+<pre class="r"><code>corstate&lt;- fullstate%&gt;%select_if(is.numeric)
+cor(corstate)</code></pre>
+<pre><code>##             Population      Income  Illiteracy    Life Exp    Gradrate
+## Population  1.00000000  0.20822756  0.10762237 -0.06805195 -0.09848975
+## Income      0.20822756  1.00000000 -0.43707519  0.34025534  0.61993232
+## Illiteracy  0.10762237 -0.43707519  1.00000000 -0.58847793 -0.65718861
+## Life Exp   -0.06805195  0.34025534 -0.58847793  1.00000000  0.58221620
+## Gradrate   -0.09848975  0.61993232 -0.65718861  0.58221620  1.00000000
+## Area        0.02254384  0.36331544  0.07726113 -0.10733194  0.33354187
+## Murder      0.32024487 -0.21520501  0.70677564 -0.77849850 -0.52159126
+## Assault     0.31702281  0.04093255  0.51101299 -0.62665800 -0.23030510
+## UrbanPop    0.51260491  0.48053302 -0.06219936  0.27146824  0.35868123
+## Rape        0.30523361  0.35738678  0.15459686 -0.26956828  0.27072504
+## totarrests  0.32850733  0.06234478  0.50456797 -0.62266255 -0.20272644
+##                   Area      Murder     Assault    UrbanPop       Rape
+## Population  0.02254384  0.32024487  0.31702281  0.51260491  0.3052336
+## Income      0.36331544 -0.21520501  0.04093255  0.48053302  0.3573868
+## Illiteracy  0.07726113  0.70677564  0.51101299 -0.06219936  0.1545969
+## Life Exp   -0.10733194 -0.77849850 -0.62665800  0.27146824 -0.2695683
+## Gradrate    0.33354187 -0.52159126 -0.23030510  0.35868123  0.2707250
+## Area        1.00000000  0.14808597  0.23120879 -0.06154747  0.5249551
+## Murder      0.14808597  1.00000000  0.80187331  0.06957262  0.5635788
+## Assault     0.23120879  0.80187331  1.00000000  0.25887170  0.6652412
+## UrbanPop   -0.06154747  0.06957262  0.25887170  1.00000000  0.4113412
+## Rape        0.52495510  0.56357883  0.66524123  0.41134124  1.0000000
+## totarrests  0.26592623  0.81887139  0.99666034  0.27555691  0.7203445
+##             totarrests
+## Population  0.32850733
+## Income      0.06234478
+## Illiteracy  0.50456797
+## Life Exp   -0.62266255
+## Gradrate   -0.20272644
+## Area        0.26592623
+## Murder      0.81887139
+## Assault     0.99666034
+## UrbanPop    0.27555691
+## Rape        0.72034452
+## totarrests  1.00000000</code></pre>
+<p>Correlation matrix between select numeric variables (socioeconomic factors and arrests)</p>
+<pre class="r"><code>corstate2 &lt;- fullstate%&gt;%na.omit%&gt;%select(Income, Illiteracy, UrbanPop, Murder, Assault, Rape)
+cor(corstate2)</code></pre>
+<pre><code>##                 Income  Illiteracy    UrbanPop      Murder    Assault
+## Income      1.00000000 -0.43707519  0.48053302 -0.21520501 0.04093255
+## Illiteracy -0.43707519  1.00000000 -0.06219936  0.70677564 0.51101299
+## UrbanPop    0.48053302 -0.06219936  1.00000000  0.06957262 0.25887170
+## Murder     -0.21520501  0.70677564  0.06957262  1.00000000 0.80187331
+## Assault     0.04093255  0.51101299  0.25887170  0.80187331 1.00000000
+## Rape        0.35738678  0.15459686  0.41134124  0.56357883 0.66524123
+##                 Rape
+## Income     0.3573868
+## Illiteracy 0.1545969
+## UrbanPop   0.4113412
+## Murder     0.5635788
+## Assault    0.6652412
+## Rape       1.0000000</code></pre>
+<p>##Create Data Visualisations</p>
+<pre class="r"><code>fullstate%&gt;%ggplot(aes(x=Income, y= Gradrate, fill=factarea))+
+  geom_point(aes(color=factarea))+ 
+  labs(title=&quot;High School Graduation Rate by Income and State Size&quot;, x= &quot;Average Income&quot;, y=&quot;Percent Population Graduated from High School&quot;)+
+  scale_x_continuous(breaks = c(3000,3500,4000,4500,5000,5500,6000,6500))+theme_minimal()</code></pre>
+<p><img src="/project1ruth_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p>Scatterplot displaying relationship between high school graduation rate and average income per state by size.Color of points represents size of state (categories derived from state area numeric variable). High school graduation rate and average income per state are positively correlated, states with a larger area typically had higher graduation rate and average income, states with ‘medium’ area had the most variability in graduation rate and average income.</p>
+<pre class="r"><code>fullstate%&gt;%ggplot(aes(x=Population, y=totarrests))+
+  geom_point(stat=&quot;summary&quot;,fun.data=&quot;mean_se&quot;, aes(color=factarea, shape=crimerate))+ 
+  labs(title = &quot;Total Arrests by Population Size&quot;, x= &quot;State Population&quot;, y=&quot;Total Arrests&quot;)+
+  theme(axis.text.x = element_text(angle = 45))</code></pre>
+<p><img src="/project1ruth_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p>Scatterplot displaying relationship between total arrests and population size, color of points represents state area size and Shape of points represents crime rate. Weak positive correlation between state population and crime rate, population data is right skewed. No clear relationship between state area size and crime rate. Unfortunately not a very telling correlation, though there is a trend for states with large area to have larger median arrest rate than medium or small area states, even when the population numbers are comparable.</p>
+<p>##Clustering!</p>
+<pre class="r"><code>pamstate&lt;-corstate%&gt;%pam(k=3)
+statepam &lt;- corstate%&gt;%mutate(cluster=as.factor(pamstate$clustering))
+statepam%&gt;%ggplot(aes(Area,Population, color=cluster ))+geom_point()</code></pre>
+<p><img src="/project1ruth_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p>Scatterplot of state population as a function of area. The PAM clusters distinctify the states’ data vertically (by area). The data for Alaska is in its own cluster because it is an extreme outlier in area, especially because its population is so low. Even when increasing the number of PAM clusters, Alaska stays in its own cluster.</p>
+
+              <hr>
+              <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div>
+            </div>
+          </div>
+          <hr>
+        <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+        </div>
+      </div>
+      
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="/js/docs.min.js"></script>
+<script src="/js/main.js"></script>
+
+<script src="/js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

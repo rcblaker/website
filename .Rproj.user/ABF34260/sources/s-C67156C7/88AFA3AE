@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1576097013710.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "88AFA3AE",
+    "lastKnownWriteTime" : 1576097113,
+    "last_content_update" : 1576097113214,
+    "path" : "~/Ruth EDA Project.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "159,5",
+        "scrollLine" : "137",
+        "source_window_id" : "wfwheoov1j1pm"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

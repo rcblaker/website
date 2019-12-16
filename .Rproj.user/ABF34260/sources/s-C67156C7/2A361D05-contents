@@ -1,0 +1,206 @@
+---
+title: "Project 2 Modelling"
+author: "Ruth Blaker"
+date: "11/21/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+```
+
+## R Markdown
+
+**Data Introduction
+```{R}
+library(mlbench)
+data("PimaIndiansDiabetes2")
+select<-dplyr::select
+Diabetes<- PimaIndiansDiabetes2%>%mutate(times_pregnant= case_when(pregnant >=10~"10+", 9 >= pregnant & pregnant >= 7~ "7-9", 6 >= pregnant & pregnant >= 4~ "4-6", pregnant <= 3~ "0-3"))
+Diabetes<-Diabetes%>%select(c(pregnant, glucose, pressure, triceps, mass, age, diabetes, times_pregnant))
+```
+
+*The Pima Indians dataset includes data from 768 Pima Indian females in 1995. This dataset can be used to predict the binary variable of a woman of the Pima Indians having diabetes from other health data including number of times the woman has been pregnant, glucose concentration, blood pressure, skin fold thickness of triceps, mass, and age. I have mutated the dataset here to create a categorical variable with 4 levels out of the pregnancy variable, and removed the columns for serum insulin and pedigree function, as they were not in my variables of interest for this product.*
+
+
+##MANOVA, ANOVA, and t.tests
+
+```{R}
+manova<- manova(cbind(glucose, pressure, mass, age) ~diabetes, data=Diabetes)
+summary(manova)
+summary.aov(manova)
+pairwise.t.test(Diabetes$glucose, Diabetes$diabetes, p.adj="none")
+pairwise.t.test(Diabetes$pressure, Diabetes$diabetes, p.adj="none")
+pairwise.t.test(Diabetes$mass, Diabetes$diabetes, p.adj="none")
+pairwise.t.test(Diabetes$age, Diabetes$diabetes, p.adj="none")
+.05/9
+```
+
+*A one way MANOVA test was con ducted to determine the effect of glucose concentration, blood pressure, body mass, and age on diabetes. Significant differences were found among the variables on the presence of diabetes (pillai trace= 0.29, psuedo F= 74.948, p<2.2e-16). ANOVA tests were also run for each of the variables, and proved to be significant at each variable as well. The post HOC t-tests revealed that each variable- glucose concentration, blood pressure, mass, and age- were significant independently. One MANOVA, four ANOVA, and four t.tests were run on this data, so the adjusted p value should be 0.0056. At this level, all of my findings are still significant. Probability of type 1 error is 1- 0.95^9 = 0.36975*
+
+##Using Randomization Test on Glucose Concentration and Diabetes!
+```{R}
+library(ggplot2)
+rand_dist <- vector()
+for(i in 1:5000){
+  diabdist <- data.frame(gluc=sample(Diabetes$glucose), diabetes=Diabetes$diabetes)
+  rand_dist[i]<-mean(diabdist[diabdist$diabetes=="pos",]$gluc)-
+    mean(diabdist[diabdist$diabetes=="neg",]$gluc)
+}
+t.test(data=Diabetes, glucose~diabetes)
+
+ggplot(Diabetes,aes(glucose,fill=diabetes))+geom_histogram(bins=6.5)+facet_wrap(~diabetes,ncol=2)
+```
+*After running a t-test with randomization, I can conclude that there is a significang difference between glucose concentration in subjects with diabetes versus those without, therefore rejecting the null hypothesis that the mean difference is equal to zero. The p-value of this test is p<2.2e-16, which is well below the alpha level of 0.05*
+
+##Linear Regression Model
+```{R}
+library(varhandle)
+Diabetes<-Diabetes%>%na.omit
+Diabetes$diabetes<-as.numeric(Diabetes$diabetes)
+glucose_c<-Diabetes$glucose-mean(Diabetes$glucose)
+pressure_c<-Diabetes$pressure-mean(Diabetes$pressure)
+lm1<-lm(diabetes~glucose_c, data=Diabetes)
+summary(lm1)
+lm2<-lm(diabetes~pressure_c, data = Diabetes)
+summary(lm2)
+lm3<-lm(diabetes~pressure_c*glucose_c, data = Diabetes)
+summary(lm3)
+```
+
+*These linear models predict the diagnosis of diabetes based on mean-cenetered values for glucose concentration and blood pressure. The first model shows that predicting diabetes from glucose concentration gives a coefficient of 1.3327 for the intercept and 0.0077 for the centered glucose level.The second model shows that predicting diabetes from cenetered blood pressure gives a coefficient of 1.3327 again for the intercept and 0.0070 for the cenetered blood pressure level. The third model predicts diabetes from the interaction between glucose concentration and blood pressure, and gives an output of 1.334 for the intercept, 2.951e-3 for centered blood pressure, 7.421e-3 for centered glucose, and -1.39e-5 for the interaction between glucose and blood pressure.*
+
+##Linear Regression Plots
+```{R}
+library(tidyverse)
+Diabetes %>% ggplot(aes(pressure_c, glucose_c))+geom_point()+geom_smooth(method='lm', se=F)
+
+resids <- lm1$residuals
+fitvals <- lm1$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color = 'red')
+ggplot()+geom_histogram(aes(resids), bins=20)
+ggplot()+geom_qq(aes(sample=resids))+geom_qq_line()
+
+resids2 <- lm2$residuals
+fitvals2 <- lm2$fitted.values
+ggplot()+geom_point(aes(fitvals2,resids2))+geom_hline(yintercept=0, color = 'red')
+ggplot()+geom_histogram(aes(resids2), bins=20)
+ggplot()+geom_qq(aes(sample=resids2))+geom_qq_line()
+
+resids3 <- lm3$residuals
+fitvals3 <- lm3$fitted.values
+ggplot()+geom_point(aes(fitvals3,resids3))+geom_hline(yintercept=0, color = 'red')
+ggplot()+geom_histogram(aes(resids3), bins=20)
+ggplot()+geom_qq(aes(sample=resids3))+geom_qq_line()
+```
+*None of these models are very good fit for homoskedacity, linearity, or normal distribution. Even though the p-values were significant, the coefficients were so small that they were not actually very good predictors of diabetes. LM3, which predicts diabetes based on thr interaction between glucose concentration and blood pressure, has the closest to a normal distribution.*
+
+##Robust Standard Errors
+```{R}
+library(lmtest)
+library(sandwich)
+coeftest(lm1, vcov=vcovHC(lm1))[,1:2]
+coeftest(lm2, vcov=vcovHC(lm2))[,1:2]
+coeftest(lm3, vcov=vcovHC(lm2))[,1:2]
+```
+*There was not a difference in the estimate values before and after calculating robust standard error*
+
+##Bootstrapped Standard Errors
+```{R}
+boot_se <- replicate(5000, {
+  boot_dat <- boot_dat <- Diabetes[sample(nrow(Diabetes), replace=TRUE),]
+  lm3 <- lm(diabetes~glucose_c*pressure_c, data=boot_dat)
+  coef(lm3)
+})
+boot_se%>%t%>%as.data.frame%>%summarize_all(sd)
+```
+*There is an observed change in the standard errors and p values after computing bootstrapped standatd errors. In the original model, the coefficient for glucose was 0.0077, for pressure was *
+
+##Logistic Regression
+```{R}
+Diabetes$diabetes<-as.factor(Diabetes$diabetes)
+odds <- function(p)p/(1-p)
+p <- seq(0,1, by=.1)
+cbind(p, odds=odds(p))%>%round(4)
+logit <- function(p)log(odds(p))
+cbind(p, odds=odds(p), logit=logit(p))%>%round(4)
+
+log1 <- glm(diabetes~glucose, data=Diabetes, family=binomial(link = "logit"))
+coeftest(log1)
+exp(coef(log1))
+
+log2<- glm(diabetes~pressure, data = Diabetes, family = binomial(link = "logit"))
+coeftest(log2)
+exp(coef(log2))
+
+predictlog1 <- predict(log1, data = Diabetes, type = "response")
+table(prediction=predictlog1>0.5, truth = Diabetes$diabetes)%>%addmargins
+##Accuracy
+(317+91)/532
+#Sensitivity
+91/129
+#Specificity
+317/403
+
+predictlog2 <- predict(log2, data = Diabetes, type = "response")
+table(prediction=predictlog2>0.5, truth = Diabetes$diabetes)%>%addmargins
+
+#Accuracy
+(348+9)/532
+#Sensitivity
+9/16
+#Specificity
+348/516
+```
+*The coefficient for glucose is 0.0404, which means that for each 1 unit increase in glucose concentration, the odds of having diabetes go up by a factor of 0.0404 (which is not very much). The coefficient for blood pressure is 0.03297, meaning that for each 1 unit increase in blood pressure, the odds of having diabetes go up by a factor of 0.03297 (again, very small).*
+
+##ROC Curve
+```{R}
+library(plotROC)
+library(ggplot2)
+ROC1 <- ggplot(Diabetes)+geom_roc(aes(d=diabetes,m=glucose), n.cuts=0)
+ROC1
+calc_auc(ROC1)
+```
+*The area under this ROC curve is 0.79397. Considering AUC value can be between 0.5 and 1, a value of 0.794 means that glucose concentration is a fairly good predictor for diabetes*
+
+##LASSO Regression
+```{R}
+Diabetes%>%mutate(diabetes = ifelse(diabetes == "pos", 1, 0))
+library(glmnet)
+set.seed(1234)
+lassobetes <- glm(diabetes~., data = Diabetes, family = "binomial")
+lassobetes
+x<-model.matrix(lassobetes)
+y<-as.matrix(Diabetes$diabetes)
+cv<-cv.glmnet(x,y,family="binomial")
+lasso<-glmnet(x,y,family="binomial", lambda = cv$lambda.1se)
+coef(lasso)
+
+````
+*The variables retained are number of times pregnant, glucose concentration, mass, and age.*
+
+##10-fold CV
+```{R}
+library(glmnet)
+Diab2<-Diabetes%>%select(pregnant, glucose, mass, age, diabetes)
+set.seed(1234)
+k=10
+Diab2samp<-Diab2[sample(nrow(Diab2)),]
+folds<-cut(seq(1:nrow(Diab2)), breaks=k, labels=FALSE)
+diags<-NULL
+for(i in 1:k){
+  train2<-Diab2samp[folds!=i,]
+  test2<-Diab2samp[folds==i,]
+  truth<-test2$diabetes
+  fit<-glm(diabetes~(.)^2, data = train2, family = "binomial")
+  probs<-predict(fit,newdata = test2, type="response")
+  #diags<-rbind(diags, class_diag(probs, truth))
+}
+#apply(diags, 2, mean)
+```
+*This out-of-sample model actually has higher AUC and accuracy than the original logistic regression, with an AUC of 0.8405 and accuracy of 0.7624*

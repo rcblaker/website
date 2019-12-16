@@ -1,0 +1,964 @@
+---
+title: "Project 2 Modelling"
+author: "Ruth Blaker"
+date: "11/21/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+
+<div id="r-markdown" class="section level2">
+<h2>R Markdown</h2>
+<p>**Data Introduction</p>
+<pre class="r"><code>library(mlbench)
+data(&quot;PimaIndiansDiabetes2&quot;)
+select&lt;-dplyr::select
+Diabetes&lt;- PimaIndiansDiabetes2%&gt;%mutate(times_pregnant= case_when(pregnant &gt;=10~&quot;10+&quot;, 9 &gt;= pregnant &amp; pregnant &gt;= 7~ &quot;7-9&quot;, 6 &gt;= pregnant &amp; pregnant &gt;= 4~ &quot;4-6&quot;, pregnant &lt;= 3~ &quot;0-3&quot;))
+Diabetes&lt;-Diabetes%&gt;%select(c(pregnant, glucose, pressure, triceps, mass, age, diabetes, times_pregnant))</code></pre>
+<p><em>The Pima Indians dataset includes data from 768 Pima Indian females in 1995. This dataset can be used to predict the binary variable of a woman of the Pima Indians having diabetes from other health data including number of times the woman has been pregnant, glucose concentration, blood pressure, skin fold thickness of triceps, mass, and age. I have mutated the dataset here to create a categorical variable with 4 levels out of the pregnancy variable, and removed the columns for serum insulin and pedigree function, as they were not in my variables of interest for this product.</em></p>
+<p>##MANOVA, ANOVA, and t.tests</p>
+<pre class="r"><code>manova&lt;- manova(cbind(glucose, pressure, mass, age) ~diabetes, data=Diabetes)
+summary(manova)</code></pre>
+<pre><code>##            Df  Pillai approx F num Df den Df    Pr(&gt;F)    
+## diabetes    1 0.29426   74.948      4    719 &lt; 2.2e-16 ***
+## Residuals 722                                             
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary.aov(manova)</code></pre>
+<pre><code>##  Response glucose :
+##              Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## diabetes      1 163062  163062  226.15 &lt; 2.2e-16 ***
+## Residuals   722 520581     721                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response pressure :
+##              Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## diabetes      1   3079 3079.35  20.638 6.502e-06 ***
+## Residuals   722 107728  149.21                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response mass :
+##              Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+## diabetes      1  3075.2 3075.21   71.08 &lt; 2.2e-16 ***
+## Residuals   722 31236.6   43.26                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response age :
+##              Df Sum Sq Mean Sq F value   Pr(&gt;F)    
+## diabetes      1   6044  6043.8  46.403 2.03e-11 ***
+## Residuals   722  94037   130.2                     
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## 44 observations deleted due to missingness</code></pre>
+<pre class="r"><code>pairwise.t.test(Diabetes$glucose, Diabetes$diabetes, p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  Diabetes$glucose and Diabetes$diabetes 
+## 
+##     neg   
+## pos &lt;2e-16
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(Diabetes$pressure, Diabetes$diabetes, p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  Diabetes$pressure and Diabetes$diabetes 
+## 
+##     neg    
+## pos 3.4e-06
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(Diabetes$mass, Diabetes$diabetes, p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  Diabetes$mass and Diabetes$diabetes 
+## 
+##     neg   
+## pos &lt;2e-16
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(Diabetes$age, Diabetes$diabetes, p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  Diabetes$age and Diabetes$diabetes 
+## 
+##     neg    
+## pos 2.2e-11
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>.05/9</code></pre>
+<pre><code>## [1] 0.005555556</code></pre>
+<p><em>A one way MANOVA test was con ducted to determine the effect of glucose concentration, blood pressure, body mass, and age on diabetes. Significant differences were found among the variables on the presence of diabetes (pillai trace= 0.29, psuedo F= 74.948, p&lt;2.2e-16). ANOVA tests were also run for each of the variables, and proved to be significant at each variable as well. The post HOC t-tests revealed that each variable- glucose concentration, blood pressure, mass, and age- were significant independently. One MANOVA, four ANOVA, and four t.tests were run on this data, so the adjusted p value should be 0.0056. At this level, all of my findings are still significant. Probability of type 1 error is 1- 0.95^9 = 0.36975</em></p>
+<p>##Using Randomization Test on Glucose Concentration and Diabetes!</p>
+<pre class="r"><code>library(ggplot2)
+rand_dist &lt;- vector()
+for(i in 1:5000){
+  diabdist &lt;- data.frame(gluc=sample(Diabetes$glucose), diabetes=Diabetes$diabetes)
+  rand_dist[i]&lt;-mean(diabdist[diabdist$diabetes==&quot;pos&quot;,]$gluc)-
+    mean(diabdist[diabdist$diabetes==&quot;neg&quot;,]$gluc)
+}
+t.test(data=Diabetes, glucose~diabetes)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  glucose by diabetes
+## t = -14.884, df = 466.02, p-value &lt; 2.2e-16
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  -35.85757 -27.49380
+## sample estimates:
+## mean in group neg mean in group pos 
+##          110.6439          142.3195</code></pre>
+<pre class="r"><code>ggplot(Diabetes,aes(glucose,fill=diabetes))+geom_histogram(bins=6.5)+facet_wrap(~diabetes,ncol=2)</code></pre>
+<pre><code>## Warning: Removed 5 rows containing non-finite values (stat_bin).</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-3-1.png" width="672" />
+<em>After running a t-test with randomization, I can conclude that there is a significang difference between glucose concentration in subjects with diabetes versus those without, therefore rejecting the null hypothesis that the mean difference is equal to zero. The p-value of this test is p&lt;2.2e-16, which is well below the alpha level of 0.05</em></p>
+<p>##Linear Regression Model</p>
+<pre class="r"><code>library(varhandle)
+Diabetes&lt;-Diabetes%&gt;%na.omit
+Diabetes$diabetes&lt;-as.numeric(Diabetes$diabetes)
+glucose_c&lt;-Diabetes$glucose-mean(Diabetes$glucose)
+pressure_c&lt;-Diabetes$pressure-mean(Diabetes$pressure)
+lm1&lt;-lm(diabetes~glucose_c, data=Diabetes)
+summary(lm1)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = diabetes ~ glucose_c, data = Diabetes)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -0.9148 -0.2788 -0.1218  0.2844  0.9970 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 1.3327068  0.0176819   75.37   &lt;2e-16 ***
+## glucose_c   0.0076620  0.0005709   13.42   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.4078 on 530 degrees of freedom
+## Multiple R-squared:  0.2536, Adjusted R-squared:  0.2522 
+## F-statistic: 180.1 on 1 and 530 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>lm2&lt;-lm(diabetes~pressure_c, data = Diabetes)
+summary(lm2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = diabetes ~ pressure_c, data = Diabetes)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -0.6032 -0.3502 -0.2659  0.5795  0.9590 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 1.332707   0.020120  66.239  &lt; 2e-16 ***
+## pressure_c  0.007028   0.001636   4.296 2.07e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.4641 on 530 degrees of freedom
+## Multiple R-squared:  0.03365,    Adjusted R-squared:  0.03182 
+## F-statistic: 18.45 on 1 and 530 DF,  p-value: 2.071e-05</code></pre>
+<pre class="r"><code>lm3&lt;-lm(diabetes~pressure_c*glucose_c, data = Diabetes)
+summary(lm3)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = diabetes ~ pressure_c * glucose_c, data = Diabetes)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -0.9155 -0.2868 -0.1109  0.2845  1.0618 
+## 
+## Coefficients:
+##                        Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           1.334e+00  1.806e-02  73.859   &lt;2e-16 ***
+## pressure_c            2.951e-03  1.471e-03   2.006   0.0454 *  
+## glucose_c             7.421e-03  5.860e-04  12.663   &lt;2e-16 ***
+## pressure_c:glucose_c -1.390e-05  4.597e-05  -0.302   0.7625    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.407 on 528 degrees of freedom
+## Multiple R-squared:  0.2594, Adjusted R-squared:  0.2552 
+## F-statistic: 61.63 on 3 and 528 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p><em>These linear models predict the diagnosis of diabetes based on mean-cenetered values for glucose concentration and blood pressure. The first model shows that predicting diabetes from glucose concentration gives a coefficient of 1.3327 for the intercept and 0.0077 for the centered glucose level.The second model shows that predicting diabetes from cenetered blood pressure gives a coefficient of 1.3327 again for the intercept and 0.0070 for the cenetered blood pressure level. The third model predicts diabetes from the interaction between glucose concentration and blood pressure, and gives an output of 1.334 for the intercept, 2.951e-3 for centered blood pressure, 7.421e-3 for centered glucose, and -1.39e-5 for the interaction between glucose and blood pressure.</em></p>
+<p>##Linear Regression Plots</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ tibble  2.1.3     ✔ purrr   0.3.3
+## ✔ tidyr   1.0.0     ✔ stringr 1.4.0
+## ✔ readr   1.3.1     ✔ forcats 0.4.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>Diabetes %&gt;% ggplot(aes(pressure_c, glucose_c))+geom_point()+geom_smooth(method=&#39;lm&#39;, se=F)</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code>resids &lt;- lm1$residuals
+fitvals &lt;- lm1$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color = &#39;red&#39;)</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_histogram(aes(resids), bins=20)</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-5-3.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_qq(aes(sample=resids))+geom_qq_line()</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-5-4.png" width="672" /></p>
+<pre class="r"><code>resids2 &lt;- lm2$residuals
+fitvals2 &lt;- lm2$fitted.values
+ggplot()+geom_point(aes(fitvals2,resids2))+geom_hline(yintercept=0, color = &#39;red&#39;)</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-5-5.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_histogram(aes(resids2), bins=20)</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-5-6.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_qq(aes(sample=resids2))+geom_qq_line()</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-5-7.png" width="672" /></p>
+<pre class="r"><code>resids3 &lt;- lm3$residuals
+fitvals3 &lt;- lm3$fitted.values
+ggplot()+geom_point(aes(fitvals3,resids3))+geom_hline(yintercept=0, color = &#39;red&#39;)</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-5-8.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_histogram(aes(resids3), bins=20)</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-5-9.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_qq(aes(sample=resids3))+geom_qq_line()</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-5-10.png" width="672" />
+<em>None of these models are very good fit for homoskedacity, linearity, or normal distribution. Even though the p-values were significant, the coefficients were so small that they were not actually very good predictors of diabetes. LM3, which predicts diabetes based on thr interaction between glucose concentration and blood pressure, has the closest to a normal distribution.</em></p>
+<p>##Robust Standard Errors</p>
+<pre class="r"><code>library(lmtest)</code></pre>
+<pre><code>## Loading required package: zoo</code></pre>
+<pre><code>## 
+## Attaching package: &#39;zoo&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     as.Date, as.Date.numeric</code></pre>
+<pre class="r"><code>library(sandwich)
+coeftest(lm1, vcov=vcovHC(lm1))[,1:2]</code></pre>
+<pre><code>##                Estimate   Std. Error
+## (Intercept) 1.332706767 0.0177085197
+## glucose_c   0.007662044 0.0005114784</code></pre>
+<pre class="r"><code>coeftest(lm2, vcov=vcovHC(lm2))[,1:2]</code></pre>
+<pre><code>##                Estimate  Std. Error
+## (Intercept) 1.332706767 0.020158851
+## pressure_c  0.007027576 0.001670026</code></pre>
+<pre class="r"><code>coeftest(lm3, vcov=vcovHC(lm2))[,1:2]</code></pre>
+<pre><code>##                Estimate  Std. Error
+## (Intercept) 1.333867062 0.020158851
+## pressure_c  0.002950885 0.001670026</code></pre>
+<p><em>There was not a difference in the estimate values before and after calculating robust standard error</em></p>
+<p>##Bootstrapped Standard Errors</p>
+<pre class="r"><code>boot_se &lt;- replicate(5000, {
+  boot_dat &lt;- boot_dat &lt;- Diabetes[sample(nrow(Diabetes), replace=TRUE),]
+  lm3 &lt;- lm(diabetes~glucose_c*pressure_c, data=boot_dat)
+  coef(lm3)
+})
+boot_se%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)    glucose_c  pressure_c glucose_c:pressure_c
+## 1  0.02139901 0.0006782335 0.001704896         5.366552e-05</code></pre>
+<p><em>There is an observed change in the standard errors and p values after computing bootstrapped standatd errors. In the original model, the coefficient for glucose was 0.0077, for pressure was </em></p>
+<p>##Logistic Regression</p>
+<pre class="r"><code>Diabetes$diabetes&lt;-as.factor(Diabetes$diabetes)
+odds &lt;- function(p)p/(1-p)
+p &lt;- seq(0,1, by=.1)
+cbind(p, odds=odds(p))%&gt;%round(4)</code></pre>
+<pre><code>##         p   odds
+##  [1,] 0.0 0.0000
+##  [2,] 0.1 0.1111
+##  [3,] 0.2 0.2500
+##  [4,] 0.3 0.4286
+##  [5,] 0.4 0.6667
+##  [6,] 0.5 1.0000
+##  [7,] 0.6 1.5000
+##  [8,] 0.7 2.3333
+##  [9,] 0.8 4.0000
+## [10,] 0.9 9.0000
+## [11,] 1.0    Inf</code></pre>
+<pre class="r"><code>logit &lt;- function(p)log(odds(p))
+cbind(p, odds=odds(p), logit=logit(p))%&gt;%round(4)</code></pre>
+<pre><code>##         p   odds   logit
+##  [1,] 0.0 0.0000    -Inf
+##  [2,] 0.1 0.1111 -2.1972
+##  [3,] 0.2 0.2500 -1.3863
+##  [4,] 0.3 0.4286 -0.8473
+##  [5,] 0.4 0.6667 -0.4055
+##  [6,] 0.5 1.0000  0.0000
+##  [7,] 0.6 1.5000  0.4055
+##  [8,] 0.7 2.3333  0.8473
+##  [9,] 0.8 4.0000  1.3863
+## [10,] 0.9 9.0000  2.1972
+## [11,] 1.0    Inf     Inf</code></pre>
+<pre class="r"><code>log1 &lt;- glm(diabetes~glucose, data=Diabetes, family=binomial(link = &quot;logit&quot;))
+coeftest(log1)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##              Estimate Std. Error z value  Pr(&gt;|z|)    
+## (Intercept) -5.750607   0.515357 -11.159 &lt; 2.2e-16 ***
+## glucose      0.040387   0.003966  10.183 &lt; 2.2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>exp(coef(log1))</code></pre>
+<pre><code>## (Intercept)     glucose 
+## 0.003180849 1.041214083</code></pre>
+<pre class="r"><code>log2&lt;- glm(diabetes~pressure, data = Diabetes, family = binomial(link = &quot;logit&quot;))
+coeftest(log2)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##               Estimate Std. Error z value  Pr(&gt;|z|)    
+## (Intercept) -3.0794538  0.5875520 -5.2412 1.596e-07 ***
+## pressure     0.0329667  0.0079434  4.1502 3.322e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>exp(coef(log2))</code></pre>
+<pre><code>## (Intercept)    pressure 
+##  0.04598437  1.03351610</code></pre>
+<pre class="r"><code>predictlog1 &lt;- predict(log1, data = Diabetes, type = &quot;response&quot;)
+table(prediction=predictlog1&gt;0.5, truth = Diabetes$diabetes)%&gt;%addmargins</code></pre>
+<pre><code>##           truth
+## prediction   1   2 Sum
+##      FALSE 317  86 403
+##      TRUE   38  91 129
+##      Sum   355 177 532</code></pre>
+<pre class="r"><code>##Accuracy
+(317+91)/532</code></pre>
+<pre><code>## [1] 0.7669173</code></pre>
+<pre class="r"><code>#Sensitivity
+91/129</code></pre>
+<pre><code>## [1] 0.7054264</code></pre>
+<pre class="r"><code>#Specificity
+317/403</code></pre>
+<pre><code>## [1] 0.7866005</code></pre>
+<pre class="r"><code>predictlog2 &lt;- predict(log2, data = Diabetes, type = &quot;response&quot;)
+table(prediction=predictlog2&gt;0.5, truth = Diabetes$diabetes)%&gt;%addmargins</code></pre>
+<pre><code>##           truth
+## prediction   1   2 Sum
+##      FALSE 348 168 516
+##      TRUE    7   9  16
+##      Sum   355 177 532</code></pre>
+<pre class="r"><code>#Accuracy
+(348+9)/532</code></pre>
+<pre><code>## [1] 0.6710526</code></pre>
+<pre class="r"><code>#Sensitivity
+9/16</code></pre>
+<pre><code>## [1] 0.5625</code></pre>
+<pre class="r"><code>#Specificity
+348/516</code></pre>
+<pre><code>## [1] 0.6744186</code></pre>
+<p><em>The coefficient for glucose is 0.0404, which means that for each 1 unit increase in glucose concentration, the odds of having diabetes go up by a factor of 0.0404 (which is not very much). The coefficient for blood pressure is 0.03297, meaning that for each 1 unit increase in blood pressure, the odds of having diabetes go up by a factor of 0.03297 (again, very small).</em></p>
+<p>##ROC Curve</p>
+<pre class="r"><code>library(plotROC)
+library(ggplot2)
+ROC1 &lt;- ggplot(Diabetes)+geom_roc(aes(d=diabetes,m=glucose), n.cuts=0)
+ROC1</code></pre>
+<pre><code>## Warning in verify_d(data$d): D not labeled 0/1, assuming 1 = 0 and 2 = 1!</code></pre>
+<p><img src="/project2ruth_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<pre class="r"><code>calc_auc(ROC1)</code></pre>
+<pre><code>## Warning in verify_d(data$d): D not labeled 0/1, assuming 1 = 0 and 2 = 1!</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.7939763</code></pre>
+<p><em>The area under this ROC curve is 0.79397. Considering AUC value can be between 0.5 and 1, a value of 0.794 means that glucose concentration is a fairly good predictor for diabetes</em></p>
+<p>##LASSO Regression</p>
+<pre class="r"><code>Diabetes%&gt;%mutate(diabetes = ifelse(diabetes == &quot;pos&quot;, 1, 0))</code></pre>
+<pre><code>##     pregnant glucose pressure triceps mass age diabetes times_pregnant
+## 1          6     148       72      35 33.6  50        0            4-6
+## 2          1      85       66      29 26.6  31        0            0-3
+## 3          1      89       66      23 28.1  21        0            0-3
+## 4          0     137       40      35 43.1  33        0            0-3
+## 5          3      78       50      32 31.0  26        0            0-3
+## 6          2     197       70      45 30.5  53        0            0-3
+## 7          1     189       60      23 30.1  59        0            0-3
+## 8          5     166       72      19 25.8  51        0            4-6
+## 9          0     118       84      47 45.8  31        0            0-3
+## 10         1     103       30      38 43.3  33        0            0-3
+## 11         1     115       70      30 34.6  32        0            0-3
+## 12         3     126       88      41 39.3  27        0            0-3
+## 13         9     119       80      35 29.0  29        0            7-9
+## 14        11     143       94      33 36.6  51        0            10+
+## 15        10     125       70      26 31.1  41        0            10+
+## 16         1      97       66      15 23.2  22        0            0-3
+## 17        13     145       82      19 22.2  57        0            10+
+## 18         5     109       75      26 36.0  60        0            4-6
+## 19         3     158       76      36 31.6  28        0            0-3
+## 20         3      88       58      11 24.8  22        0            0-3
+## 21        10     122       78      31 27.6  45        0            10+
+## 22         4     103       60      33 24.0  33        0            4-6
+## 23         9     102       76      37 32.9  46        0            7-9
+## 24         2      90       68      42 38.2  27        0            0-3
+## 25         4     111       72      47 37.1  56        0            4-6
+## 26         3     180       64      25 34.0  26        0            0-3
+## 27         7     106       92      18 22.7  48        0            7-9
+## 28         9     171      110      24 45.4  54        0            7-9
+## 29         0     180       66      39 42.0  25        0            0-3
+## 30         2      71       70      27 28.0  22        0            0-3
+## 31         7     103       66      32 39.1  31        0            7-9
+## 32         1     103       80      11 19.4  22        0            0-3
+## 33         1     101       50      15 24.2  26        0            0-3
+## 34         5      88       66      21 24.4  30        0            4-6
+## 35         8     176       90      34 33.7  58        0            7-9
+## 36         7     150       66      42 34.7  42        0            7-9
+## 37         1      73       50      10 23.0  21        0            0-3
+## 38         7     187       68      39 37.7  41        0            7-9
+## 39         0     100       88      60 46.8  31        0            0-3
+## 40         0     105       64      41 41.5  22        0            0-3
+## 41         2     141       58      34 25.4  24        0            0-3
+## 42         5      99       74      27 29.0  32        0            4-6
+## 43         0     109       88      30 32.5  38        0            0-3
+## 44         1      95       66      13 19.6  25        0            0-3
+## 45         4     146       85      27 28.9  27        0            4-6
+## 46         2     100       66      20 32.9  28        0            0-3
+## 47         5     139       64      35 28.6  26        0            4-6
+## 48         4     129       86      20 35.1  23        0            4-6
+## 49         1      79       75      30 32.0  22        0            0-3
+## 50         5      95       72      33 37.7  27        0            4-6
+## 51         2     112       66      22 25.0  24        0            0-3
+## 52         3     113       44      13 22.4  22        0            0-3
+## 53         7      83       78      26 29.3  36        0            7-9
+## 54         0     101       65      28 24.6  22        0            0-3
+## 55         2     110       74      29 32.4  27        0            0-3
+## 56        13     106       72      54 36.6  45        0            10+
+## 57         2     100       68      25 38.5  26        0            0-3
+## 58        15     136       70      32 37.1  43        0            10+
+## 59         1     107       68      19 26.5  24        0            0-3
+## 60         4     123       80      15 32.0  34        0            4-6
+## 61         7      81       78      40 46.7  42        0            7-9
+## 62         2     142       82      18 24.7  21        0            0-3
+## 63         6     144       72      27 33.9  40        0            4-6
+## 64         2      92       62      28 31.6  24        0            0-3
+## 65         1      71       48      18 20.4  22        0            0-3
+## 66         6      93       50      30 28.7  23        0            4-6
+## 67         1     122       90      51 49.7  31        0            0-3
+## 68         1      81       72      18 26.6  24        0            0-3
+## 69         1     126       56      29 28.7  21        0            0-3
+## 70         4     144       58      28 29.5  37        0            4-6
+## 71         3      83       58      31 34.3  25        0            0-3
+## 72         0      95       85      25 37.4  24        0            0-3
+## 73         3     171       72      33 33.3  24        0            0-3
+## 74         8     155       62      26 34.0  46        0            7-9
+## 75         1      89       76      34 31.2  23        0            0-3
+## 76         7     160       54      32 30.5  39        0            7-9
+## 77         4      97       60      23 28.2  22        0            4-6
+## 78         4      99       76      15 23.2  21        0            4-6
+## 79         0     162       76      56 53.2  25        0            0-3
+## 80         6     111       64      39 34.2  24        0            4-6
+## 81         2     107       74      30 33.6  23        0            0-3
+## 82         1      88       30      42 55.0  26        0            0-3
+## 83         3     120       70      30 42.9  30        0            0-3
+## 84         1     118       58      36 33.3  23        0            0-3
+## 85         1     117       88      24 34.5  40        0            0-3
+## 86         4     173       70      14 29.7  33        0            4-6
+## 87         3     170       64      37 34.5  30        0            0-3
+## 88         8      84       74      31 38.3  39        0            7-9
+## 89         2      96       68      13 21.1  26        0            0-3
+## 90         2     125       60      20 33.8  31        0            0-3
+## 91         0     100       70      26 30.8  21        0            0-3
+## 92         0      93       60      25 28.7  22        0            0-3
+## 93         5     105       72      29 36.9  28        0            4-6
+## 94         5     106       82      30 39.5  38        0            4-6
+## 95         2     108       52      26 32.5  22        0            0-3
+## 96         4     154       62      31 32.8  23        0            4-6
+## 97         9      57       80      37 32.8  41        0            7-9
+## 98         2     106       64      35 30.5  34        0            0-3
+## 99         2      90       70      17 27.3  22        0            0-3
+## 100        1     136       74      50 37.4  24        0            0-3
+## 101        9     156       86      28 34.3  42        0            7-9
+## 102        1     153       82      42 40.6  23        0            0-3
+## 103        7     152       88      44 50.0  36        0            7-9
+## 104        2      99       52      15 24.6  21        0            0-3
+## 105        1     109       56      21 25.2  23        0            0-3
+## 106        2      88       74      19 29.0  22        0            0-3
+## 107       17     163       72      41 40.9  47        0            10+
+## 108        4     151       90      38 29.7  36        0            4-6
+## 109        7     102       74      40 37.2  45        0            7-9
+## 110        0     114       80      34 44.2  27        0            0-3
+## 111        2     100       64      23 29.7  21        0            0-3
+## 112        6     104       74      18 29.9  41        0            4-6
+## 113        3     148       66      25 32.5  22        0            0-3
+## 114        3     111       90      12 28.4  29        0            0-3
+## 115        6     134       70      23 35.4  29        0            4-6
+## 116        1      79       60      42 43.5  23        0            0-3
+## 117        2      75       64      24 29.7  33        0            0-3
+## 118        8     179       72      42 32.7  36        0            7-9
+## 119        0     129      110      46 67.1  26        0            0-3
+## 120        0     119       64      18 34.9  23        0            0-3
+## 121        7     194       68      28 35.9  41        0            7-9
+## 122        8     181       68      36 30.1  60        0            7-9
+## 123        1     128       98      41 32.0  33        0            0-3
+## 124        8     109       76      39 27.9  31        0            7-9
+## 125        5     139       80      35 31.6  25        0            4-6
+## 126        9     123       70      44 33.1  40        0            7-9
+## 127        8      85       55      20 24.4  42        0            7-9
+## 128        5     158       84      41 39.4  29        0            4-6
+## 129        3     107       62      13 22.9  23        0            0-3
+## 130        4     109       64      44 34.8  26        0            4-6
+## 131        4     148       60      27 30.9  29        0            4-6
+## 132        0     113       80      16 31.0  21        0            0-3
+## 133        0     108       68      20 27.3  32        0            0-3
+## 134        2      99       70      16 20.4  27        0            0-3
+## 135        6     103       72      32 37.7  55        0            4-6
+## 136        5     111       72      28 23.9  27        0            4-6
+## 137        8     196       76      29 37.5  57        0            7-9
+## 138        1      96       64      27 33.2  21        0            0-3
+## 139        7     184       84      33 35.5  41        0            7-9
+## 140        2      81       60      22 27.7  25        0            0-3
+## 141        0     147       85      54 42.8  24        0            0-3
+## 142        7     179       95      31 34.2  60        0            7-9
+## 143        0     140       65      26 42.6  24        0            0-3
+## 144        9     112       82      32 34.2  36        0            7-9
+## 145       12     151       70      40 41.8  38        0            10+
+## 146        5     109       62      41 35.8  25        0            4-6
+## 147        6     125       68      30 30.0  32        0            4-6
+## 148        5      85       74      22 29.0  32        0            4-6
+## 149        0     177       60      29 34.6  21        0            0-3
+## 150        7     142       60      33 28.8  61        0            7-9
+## 151        1     100       66      15 23.6  26        0            0-3
+## 152        1      87       78      27 34.6  22        0            0-3
+## 153        3     162       52      38 37.2  24        0            0-3
+## 154        4     197       70      39 36.7  31        0            4-6
+## 155        0     117       80      31 45.2  24        0            0-3
+## 156        6     134       80      37 46.2  46        0            4-6
+## 157        1      79       80      25 25.4  22        0            0-3
+## 158        3      74       68      28 29.7  23        0            0-3
+## 159        7     181       84      21 35.9  51        0            7-9
+## 160        0     179       90      27 44.1  23        0            0-3
+## 161        9     164       84      21 30.8  32        0            7-9
+## 162        1      91       64      24 29.2  21        0            0-3
+## 163        4      91       70      32 33.1  22        0            4-6
+## 164        6     119       50      22 27.1  33        0            4-6
+## 165        2     146       76      35 38.2  29        0            0-3
+## 166        9     184       85      15 30.0  49        0            7-9
+## 167        0     165       90      33 52.3  23        0            0-3
+## 168        9     124       70      33 35.4  34        0            7-9
+## 169        1     111       86      19 30.1  23        0            0-3
+## 170        2      90       80      14 24.4  24        0            0-3
+## 171        0      86       68      32 35.8  25        0            0-3
+## 172       12      92       62       7 27.6  44        0            10+
+## 173        1     113       64      35 33.6  21        0            0-3
+## 174        3     111       56      39 30.1  30        0            0-3
+## 175        2     114       68      22 28.7  25        0            0-3
+## 176        1     193       50      16 25.9  24        0            0-3
+## 177       11     155       76      28 33.3  51        0            10+
+## 178        3     191       68      15 30.9  34        0            0-3
+## 179        4      95       70      32 32.1  24        0            4-6
+## 180        3     142       80      15 32.4  63        0            0-3
+## 181        5      96       74      18 33.6  43        0            4-6
+## 182        2     128       64      42 40.0  24        0            0-3
+## 183       10     101       86      37 45.6  38        0            10+
+## 184        2     108       62      32 25.2  21        0            0-3
+## 185        1      71       78      50 33.2  21        0            0-3
+## 186        2     100       70      52 40.5  25        0            0-3
+## 187        7     106       60      24 26.5  29        0            7-9
+## 188        0     104       64      23 27.8  23        0            0-3
+## 189        2     108       62      10 25.3  22        0            0-3
+## 190       10     129       76      28 35.9  39        0            10+
+## 191        7     133       88      15 32.4  37        0            7-9
+## 192        7     136       74      26 26.0  51        0            7-9
+## 193        5     155       84      44 38.7  34        0            4-6
+## 194        1     119       86      39 45.6  29        0            0-3
+## 195        4      96       56      17 20.8  26        0            4-6
+## 196        5     108       72      43 36.1  33        0            4-6
+## 197        0      78       88      29 36.9  21        0            0-3
+## 198        0     107       62      30 36.6  25        0            0-3
+## 199        2     128       78      37 43.3  31        0            0-3
+## 200        1     128       48      45 40.5  24        0            0-3
+## 201        6     151       62      31 35.5  28        0            4-6
+## 202        2     146       70      38 28.0  29        0            0-3
+## 203        0     126       84      29 30.7  24        0            0-3
+## 204       14     100       78      25 36.6  46        0            10+
+## 205        2     144       58      33 31.6  25        0            0-3
+## 206        5      77       82      41 35.8  35        0            4-6
+## 207        2     120       76      37 39.7  29        0            0-3
+## 208       10     161       68      23 25.5  47        0            10+
+## 209        0     137       68      14 24.8  21        0            0-3
+## 210        0     128       68      19 30.5  25        0            0-3
+## 211        2     124       68      28 32.9  30        0            0-3
+## 212        6      80       66      30 26.2  41        0            4-6
+## 213        0     106       70      37 39.4  22        0            0-3
+## 214        2     155       74      17 26.6  27        0            0-3
+## 215        3     113       50      10 29.5  25        0            0-3
+## 216        7     109       80      31 35.9  43        0            7-9
+## 217        2     112       68      22 34.1  26        0            0-3
+## 218        3      99       80      11 19.3  30        0            0-3
+## 219        3     115       66      39 38.1  28        0            0-3
+## 220        4     129       60      12 27.5  31        0            4-6
+## 221        3     112       74      30 31.6  25        0            0-3
+## 222        0     124       70      20 27.4  36        0            0-3
+## 223       13     152       90      33 26.8  43        0            10+
+## 224        2     112       75      32 35.7  21        0            0-3
+## 225        1     157       72      21 25.6  24        0            0-3
+## 226        1     122       64      32 35.1  30        0            0-3
+## 227        2     102       86      36 45.5  23        0            0-3
+## 228        6     105       70      32 30.8  37        0            4-6
+## 229        8     118       72      19 23.1  46        0            7-9
+## 230        2      87       58      16 32.7  25        0            0-3
+## 231        1      95       60      18 23.9  22        0            0-3
+## 232        0     165       76      43 47.9  26        0            0-3
+## 233        9     152       78      34 34.2  33        0            7-9
+## 234        1     130       70      13 25.9  22        0            0-3
+## 235        1      95       74      21 25.9  36        0            0-3
+## 236        8     126       88      36 38.5  49        0            7-9
+## 237        1     139       46      19 28.7  22        0            0-3
+## 238        3      99       62      19 21.8  26        0            0-3
+## 239        3      61       82      28 34.4  46        0            0-3
+## 240        1      90       62      12 27.2  24        0            0-3
+## 241        1     125       50      40 33.3  28        0            0-3
+## 242       12      88       74      40 35.3  48        0            10+
+## 243        1     196       76      36 36.5  29        0            0-3
+## 244        5     189       64      33 31.2  29        0            4-6
+## 245        5     103      108      37 39.2  65        0            4-6
+## 246        4     147       74      25 34.9  30        0            4-6
+## 247        5      99       54      28 34.0  30        0            4-6
+## 248        0     101       64      17 21.0  21        0            0-3
+## 249        3      81       86      16 27.5  22        0            0-3
+## 250        1     133      102      28 32.8  45        0            0-3
+## 251        3     173       82      48 38.4  25        0            0-3
+## 252        0      84       64      22 35.8  21        0            0-3
+## 253        2     105       58      40 34.9  25        0            0-3
+## 254        2     122       52      43 36.2  28        0            0-3
+## 255       12     140       82      43 39.2  58        0            10+
+## 256        0      98       82      15 25.2  22        0            0-3
+## 257        1      87       60      37 37.2  22        0            0-3
+## 258        0      93      100      39 43.4  35        0            0-3
+## 259        1     107       72      30 30.8  24        0            0-3
+## 260        0     105       68      22 20.0  22        0            0-3
+## 261        1     109       60       8 25.4  21        0            0-3
+## 262        1      90       62      18 25.1  25        0            0-3
+## 263        1     125       70      24 24.3  25        0            0-3
+## 264        1     119       54      13 22.3  24        0            0-3
+## 265        5     116       74      29 32.3  35        0            4-6
+## 266        8     105      100      36 43.3  45        0            7-9
+## 267        5     144       82      26 32.0  58        0            4-6
+## 268        3     100       68      23 31.6  28        0            0-3
+## 269        1     100       66      29 32.0  42        0            0-3
+## 270        1     131       64      14 23.7  21        0            0-3
+## 271        4     116       72      12 22.1  37        0            4-6
+## 272        2     127       58      24 27.7  25        0            0-3
+## 273        3      96       56      34 24.7  39        0            0-3
+## 274        0     131       66      40 34.3  22        0            0-3
+## 275        3     193       70      31 34.9  25        0            0-3
+## 276        5     136       84      41 35.0  35        0            4-6
+## 277        9      72       78      25 31.6  38        0            7-9
+## 278        2     123       48      32 42.1  26        0            0-3
+## 279        1     172       68      49 42.4  28        0            0-3
+## 280        6     102       90      39 35.7  28        0            4-6
+## 281        1     112       72      30 34.4  25        0            0-3
+## 282        1     143       84      23 42.4  22        0            0-3
+## 283        1     143       74      22 26.2  21        0            0-3
+## 284        0     138       60      35 34.6  21        0            0-3
+## 285        3     173       84      33 35.7  22        0            0-3
+## 286        1      97       68      21 27.2  22        0            0-3
+## 287        4     144       82      32 38.5  37        0            4-6
+## 288        3     129       64      29 26.4  28        0            0-3
+## 289        1     119       88      41 45.3  26        0            0-3
+## 290        2      94       68      18 26.0  21        0            0-3
+## 291        0     102       64      46 40.6  21        0            0-3
+## 292        2     115       64      22 30.8  21        0            0-3
+## 293        8     151       78      32 42.9  36        0            7-9
+## 294        4     184       78      39 37.0  31        0            4-6
+## 295        1     181       64      30 34.1  38        0            0-3
+## 296        0     135       94      46 40.6  26        0            0-3
+## 297        1      95       82      25 35.0  43        0            0-3
+## 298        3      89       74      16 30.4  38        0            0-3
+## 299        1      80       74      11 30.0  22        0            0-3
+## 300        1      90       68       8 24.5  36        0            0-3
+## 301       12     140       85      33 37.4  41        0            10+
+## 302        1      97       70      15 18.2  21        0            0-3
+## 303        0     189      104      25 34.3  41        0            0-3
+## 304        2      83       66      23 32.2  22        0            0-3
+## 305        4     117       64      27 33.2  24        0            4-6
+## 306        4     117       62      12 29.7  30        0            4-6
+## 307        0     180       78      63 59.4  25        0            0-3
+## 308        1     100       72      12 25.3  28        0            0-3
+## 309        0      95       80      45 36.5  26        0            0-3
+## 310        0     104       64      37 33.6  22        0            0-3
+## 311        0     120       74      18 30.5  26        0            0-3
+## 312        1      82       64      13 21.2  23        0            0-3
+## 313        0      91       68      32 39.9  25        0            0-3
+## 314        2     100       54      28 37.8  24        0            0-3
+## 315       14     175       62      30 33.6  38        0            10+
+## 316        5      86       68      28 30.2  24        0            4-6
+## 317       10     148       84      48 37.6  51        0            10+
+## 318        9     134       74      33 25.9  81        0            7-9
+## 319        9     120       72      22 20.8  48        0            7-9
+## 320        8      74       70      40 35.3  39        0            7-9
+## 321        5      88       78      30 27.6  37        0            4-6
+## 322        0     124       56      13 21.8  21        0            0-3
+## 323        0      74       52      10 27.8  22        0            0-3
+## 324        0      97       64      36 36.8  25        0            0-3
+## 325        6     154       78      41 46.1  27        0            4-6
+## 326        1     144       82      40 41.3  28        0            0-3
+## 327        0     137       70      38 33.2  22        0            0-3
+## 328        0     119       66      27 38.8  22        0            0-3
+## 329        0     137       84      27 27.3  59        0            0-3
+## 330        2     105       80      45 33.7  29        0            0-3
+## 331        7     114       76      17 23.8  31        0            7-9
+## 332        8     126       74      38 25.9  39        0            7-9
+## 333        4     132       86      31 28.0  63        0            4-6
+## 334        3     158       70      30 35.5  35        0            0-3
+## 335        0     123       88      37 35.2  29        0            0-3
+## 336        4      85       58      22 27.8  28        0            4-6
+## 337        0      84       82      31 38.2  23        0            0-3
+## 338        0     135       68      42 42.3  24        0            0-3
+## 339        1     139       62      41 40.7  21        0            0-3
+## 340        0     173       78      32 46.5  58        0            0-3
+## 341        4      99       72      17 25.6  28        0            4-6
+## 342        2      83       65      28 36.8  24        0            0-3
+## 343        2      89       90      30 33.5  42        0            0-3
+## 344        4      99       68      38 32.8  33        0            4-6
+## 345        4     125       70      18 28.9  45        0            4-6
+## 346        2      81       72      15 30.1  25        0            0-3
+## 347        7     195       70      33 25.1  55        0            7-9
+## 348        6     154       74      32 29.3  39        0            4-6
+## 349        2     117       90      19 25.2  21        0            0-3
+## 350        3      84       72      32 37.2  28        0            0-3
+## 351        7      94       64      25 33.3  41        0            7-9
+## 352        3      96       78      39 37.3  40        0            0-3
+## 353        0     180       90      26 36.5  35        0            0-3
+## 354        1     130       60      23 28.6  21        0            0-3
+## 355        2      84       50      23 30.4  21        0            0-3
+## 356       12      84       72      31 29.7  46        0            10+
+## 357        0     139       62      17 22.1  21        0            0-3
+## 358        3      99       54      19 25.6  24        0            0-3
+## 359        3     163       70      18 31.6  28        0            0-3
+## 360        9     145       88      34 30.3  53        0            7-9
+## 361        6     129       90       7 19.6  60        0            4-6
+## 362        2      68       70      32 25.0  25        0            0-3
+## 363        3     124       80      33 33.2  26        0            0-3
+## 364        3      87       60      18 21.8  21        0            0-3
+## 365        1      97       64      19 18.2  21        0            0-3
+## 366        3     116       74      15 26.3  24        0            0-3
+## 367        0     117       66      31 30.8  22        0            0-3
+## 368        2     122       60      18 29.8  22        0            0-3
+## 369        1      86       66      52 41.3  29        0            0-3
+## 370        1      77       56      30 33.3  24        0            0-3
+## 371        0     127       80      37 36.3  23        0            0-3
+## 372        3     129       92      49 36.4  32        0            0-3
+## 373        8     100       74      40 39.4  43        0            7-9
+## 374        3     128       72      25 32.4  27        0            0-3
+## 375       10      90       85      32 34.9  56        0            10+
+## 376        4      84       90      23 39.5  25        0            4-6
+## 377        1      88       78      29 32.0  29        0            0-3
+## 378        8     186       90      35 34.5  37        0            7-9
+## 379        5     187       76      27 43.6  53        0            4-6
+## 380        4     131       68      21 33.1  28        0            4-6
+## 381        1     164       82      43 32.8  50        0            0-3
+## 382        4     189      110      31 28.5  37        0            4-6
+## 383        1     116       70      28 27.4  21        0            0-3
+## 384        3      84       68      30 31.9  25        0            0-3
+## 385        1      88       62      24 29.9  23        0            0-3
+## 386        1      84       64      23 36.9  28        0            0-3
+## 387        7     124       70      33 25.5  37        0            7-9
+## 388        1      97       70      40 38.1  30        0            0-3
+## 389       11     103       68      40 46.2  42        0            10+
+## 390        0     198       66      32 41.3  28        0            0-3
+## 391        1      87       68      34 37.6  24        0            0-3
+## 392        6      99       60      19 26.9  32        0            4-6
+## 393        2      95       54      14 26.1  22        0            0-3
+## 394        1      99       72      30 38.6  21        0            0-3
+## 395        6      92       62      32 32.0  46        0            4-6
+## 396        4     154       72      29 31.3  37        0            4-6
+## 397        0     121       66      30 34.3  33        0            0-3
+## 398        3     111       58      31 29.5  22        0            0-3
+## 399        2      98       60      17 34.7  22        0            0-3
+## 400        1     143       86      30 30.1  23        0            0-3
+## 401        1     119       44      47 35.5  25        0            0-3
+## 402        6     108       44      20 24.0  35        0            4-6
+## 403        2     197       70      99 34.7  62        0            0-3
+## 404        0     151       90      46 42.1  21        0            0-3
+## 405        6     109       60      27 25.0  27        0            4-6
+## 406       12     121       78      17 26.5  62        0            10+
+## 407        8     124       76      24 28.7  52        0            7-9
+## 408        1      93       56      11 22.5  22        0            0-3
+## 409        3     176       86      27 33.3  52        0            0-3
+## 410       11     111       84      40 46.8  45        0            10+
+## 411        2     112       78      50 39.4  24        0            0-3
+## 412        2      82       52      22 28.5  25        0            0-3
+## 413        6     123       72      45 33.6  34        0            4-6
+## 414        0     188       82      14 32.0  22        0            0-3
+## 415        1      89       24      19 27.8  21        0            0-3
+## 416        1     109       38      18 23.1  26        0            0-3
+## 417        1     108       88      19 27.1  24        0            0-3
+## 418        1     124       74      36 27.8  30        0            0-3
+## 419        7     150       78      29 35.2  54        0            7-9
+## 420        1     124       60      32 35.8  21        0            0-3
+## 421        1     181       78      42 40.0  22        0            0-3
+## 422        1      92       62      25 19.5  25        0            0-3
+## 423        0     152       82      39 41.5  27        0            0-3
+## 424        1     111       62      13 24.0  23        0            0-3
+## 425        3     106       54      21 30.9  24        0            0-3
+## 426        3     174       58      22 32.9  36        0            0-3
+## 427        7     168       88      42 38.2  40        0            7-9
+## 428        6     105       80      28 32.5  26        0            4-6
+## 429       11     138       74      26 36.1  50        0            10+
+## 430        2      68       62      13 20.1  23        0            0-3
+## 431        9     112       82      24 28.2  50        0            7-9
+## 432        2     112       86      42 38.4  28        0            0-3
+## 433        2      92       76      20 24.2  28        0            0-3
+## 434        0      94       70      27 43.5  21        0            0-3
+## 435        4      90       88      47 37.7  29        0            4-6
+## 436        4      94       65      22 24.7  21        0            4-6
+## 437        0     102       78      40 34.5  24        0            0-3
+## 438        1     128       82      17 27.5  22        0            0-3
+## 439        2      94       76      18 31.6  23        0            0-3
+## 440        7      97       76      32 40.9  32        0            7-9
+## 441        1     100       74      12 19.5  28        0            0-3
+## 442        0     102       86      17 29.3  27        0            0-3
+## 443        3     103       72      30 27.6  27        0            0-3
+## 444        2     157       74      35 39.4  30        0            0-3
+## 445        1     167       74      17 23.4  33        0            0-3
+## 446        0     179       50      36 37.8  22        0            0-3
+## 447       11     136       84      35 28.3  42        0            10+
+## 448        0     107       60      25 26.4  23        0            0-3
+## 449        1      91       54      25 25.2  23        0            0-3
+## 450        1     117       60      23 33.8  27        0            0-3
+## 451        5     123       74      40 34.1  28        0            4-6
+## 452        1     106       70      28 34.2  22        0            0-3
+## 453        2     155       52      27 38.7  25        0            0-3
+## 454        2     101       58      35 21.8  22        0            0-3
+## 455        1     120       80      48 38.9  41        0            0-3
+## 456        3      80       82      31 34.2  27        0            0-3
+## 457        1     199       76      43 42.9  22        0            0-3
+## 458        8     167      106      46 37.6  43        0            7-9
+## 459        9     145       80      46 37.9  40        0            7-9
+## 460        6     115       60      39 33.7  40        0            4-6
+## 461        1     112       80      45 34.8  24        0            0-3
+## 462        4     145       82      18 32.5  70        0            4-6
+## 463       10     111       70      27 27.5  40        0            10+
+## 464        6      98       58      33 34.0  43        0            4-6
+## 465        9     154       78      30 30.9  45        0            7-9
+## 466        6     165       68      26 33.6  49        0            4-6
+## 467        1      99       58      10 25.4  21        0            0-3
+## 468       10      68      106      23 35.5  47        0            10+
+## 469        3     123      100      35 57.3  22        0            0-3
+## 470        2     101       58      17 24.2  23        0            0-3
+## 471        2      56       56      28 24.2  22        0            0-3
+## 472        0     162       76      36 49.6  26        0            0-3
+## 473        0      95       64      39 44.6  22        0            0-3
+## 474        2     129       74      26 33.2  25        0            0-3
+## 475        1     107       50      19 28.3  29        0            0-3
+## 476        1     140       74      26 24.1  23        0            0-3
+## 477        1     144       82      46 46.1  46        0            0-3
+## 478        2     121       70      32 39.1  23        0            0-3
+## 479        7     129       68      49 38.5  43        0            7-9
+## 480        7     142       90      24 30.4  43        0            7-9
+## 481        3     169       74      19 29.9  31        0            0-3
+## 482        4     127       88      11 34.5  28        0            4-6
+## 483        2     122       76      27 35.9  26        0            0-3
+## 484        6     125       78      31 27.6  49        0            4-6
+## 485        1     168       88      29 35.0  52        0            0-3
+## 486        4     110       76      20 28.4  27        0            4-6
+## 487        6      80       80      36 39.8  28        0            4-6
+## 488        2     127       46      21 34.4  22        0            0-3
+## 489        2      93       64      32 38.0  23        0            0-3
+## 490        3     158       64      13 31.2  24        0            0-3
+## 491        5     126       78      27 29.6  40        0            4-6
+## 492       10     129       62      36 41.2  38        0            10+
+## 493        0     134       58      20 26.4  21        0            0-3
+## 494        7     187       50      33 33.9  34        0            7-9
+## 495        3     173       78      39 33.8  31        0            0-3
+## 496       10      94       72      18 23.1  56        0            10+
+## 497        1     108       60      46 35.5  24        0            0-3
+## 498        5      97       76      27 35.6  52        0            4-6
+## 499        4      83       86      19 29.3  34        0            4-6
+## 500        1     114       66      36 38.1  21        0            0-3
+## 501        1     149       68      29 29.3  42        0            0-3
+## 502        5     117       86      30 39.1  42        0            4-6
+## 503        4     112       78      40 39.4  38        0            4-6
+## 504        1     116       78      29 36.1  25        0            0-3
+## 505        0     141       84      26 32.4  22        0            0-3
+## 506        3     130       78      23 28.4  34        0            0-3
+## 507        2     174       88      37 44.5  24        0            0-3
+## 508        2     106       56      27 29.0  22        0            0-3
+## 509        4      95       60      32 35.4  28        0            4-6
+## 510        0     126       86      27 27.4  21        0            0-3
+## 511        8      65       72      23 32.0  42        0            7-9
+## 512        2      99       60      17 36.6  21        0            0-3
+## 513       11     120       80      37 42.3  48        0            10+
+## 514        3     102       44      20 30.8  26        0            0-3
+## 515        1     109       58      18 28.5  22        0            0-3
+## 516       13     153       88      37 40.6  39        0            10+
+## 517       12     100       84      33 30.0  46        0            10+
+## 518        1     147       94      41 49.3  27        0            0-3
+## 519        1      81       74      41 46.3  32        0            0-3
+## 520        3     187       70      22 36.4  36        0            0-3
+## 521        1     121       78      39 39.0  28        0            0-3
+## 522        3     108       62      24 26.0  25        0            0-3
+## 523        0     181       88      44 43.3  26        0            0-3
+## 524        8     154       78      32 32.4  45        0            7-9
+## 525        1     128       88      39 36.5  37        0            0-3
+## 526        7     137       90      41 32.0  39        0            7-9
+## 527        2      88       58      26 28.4  22        0            0-3
+## 528        9     170       74      31 44.0  43        0            7-9
+## 529       10     101       76      48 32.9  63        0            10+
+## 530        2     122       70      27 36.8  27        0            0-3
+## 531        5     121       72      23 26.2  30        0            4-6
+## 532        1      93       70      31 30.4  23        0            0-3</code></pre>
+<pre class="r"><code>library(glmnet)</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## 
+## Attaching package: &#39;Matrix&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:tidyr&#39;:
+## 
+##     expand, pack, unpack</code></pre>
+<pre><code>## Loaded glmnet 3.0-1</code></pre>
+<pre class="r"><code>set.seed(1234)
+lassobetes &lt;- glm(diabetes~., data = Diabetes, family = &quot;binomial&quot;)
+lassobetes</code></pre>
+<pre><code>## 
+## Call:  glm(formula = diabetes ~ ., family = &quot;binomial&quot;, data = Diabetes)
+## 
+## Coefficients:
+##       (Intercept)           pregnant            glucose  
+##         -8.821367           0.124164           0.035405  
+##          pressure            triceps               mass  
+##         -0.009366           0.007554           0.082026  
+##               age  times_pregnant10+  times_pregnant4-6  
+##          0.031468          -0.150282          -0.588555  
+## times_pregnant7-9  
+##          0.045907  
+## 
+## Degrees of Freedom: 531 Total (i.e. Null);  522 Residual
+## Null Deviance:       676.8 
+## Residual Deviance: 475.8     AIC: 495.8</code></pre>
+<pre class="r"><code>x&lt;-model.matrix(lassobetes)
+y&lt;-as.matrix(Diabetes$diabetes)
+cv&lt;-cv.glmnet(x,y,family=&quot;binomial&quot;)
+lasso&lt;-glmnet(x,y,family=&quot;binomial&quot;, lambda = cv$lambda.1se)
+coef(lasso)</code></pre>
+<pre><code>## 11 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                            s0
+## (Intercept)       -4.44368048
+## (Intercept)        .         
+## pregnant           0.01238077
+## glucose            0.02195295
+## pressure           .         
+## triceps            .         
+## mass               0.01963361
+## age                0.01017740
+## times_pregnant10+  .         
+## times_pregnant4-6  .         
+## times_pregnant7-9  .</code></pre>
+<p><em>The variables retained are number of times pregnant, glucose concentration, mass, and age.</em></p>
+<p>##10-fold CV</p>
+<pre class="r"><code>library(glmnet)
+Diab2&lt;-Diabetes%&gt;%select(pregnant, glucose, mass, age, diabetes)
+set.seed(1234)
+k=10
+Diab2samp&lt;-Diab2[sample(nrow(Diab2)),]
+folds&lt;-cut(seq(1:nrow(Diab2)), breaks=k, labels=FALSE)
+diags&lt;-NULL
+for(i in 1:k){
+  train2&lt;-Diab2samp[folds!=i,]
+  test2&lt;-Diab2samp[folds==i,]
+  truth&lt;-test2$diabetes
+  fit&lt;-glm(diabetes~(.)^2, data = train2, family = &quot;binomial&quot;)
+  probs&lt;-predict(fit,newdata = test2, type=&quot;response&quot;)
+  #diags&lt;-rbind(diags, class_diag(probs, truth))
+}
+#apply(diags, 2, mean)</code></pre>
+<p><em>This out-of-sample model actually has higher AUC and accuracy than the original logistic regression, with an AUC of 0.8405 and accuracy of 0.7624</em></p>
+</div>

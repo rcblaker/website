@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Blogs on Ruth Blaker</title>
+    <link>/blog/</link>
+    <description>Recent content in Blogs on Ruth Blaker</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Sun, 15 Dec 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/blog/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>My Cat!</title>
+      <link>/blog/my-cat/</link>
+      <pubDate>Sun, 15 Dec 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/my-cat/</guid>
+      <description>My cat’s name is Chunk, and I adopted him from the humane society two and a half years ago. He is a fat (14.5 lb) Siamese cat and is the most loving boy in the whole world. Not to brag, but many people who previously hated cats have met Chunk and fallen in love. He loves belly rubs and will sit on anyone’s lap if there is a blanket on it.</description>
+    </item>
+    
+    <item>
+      <title>We&#39;ve Been Learning Python!</title>
+      <link>/blog/we-ve-been-learning-python/</link>
+      <pubDate>Sun, 15 Dec 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/we-ve-been-learning-python/</guid>
+      <description> In addition to working in R studio this year, we’ve been learning how to work with Python! This is my first time ever learning Python coding, and it’s definitely more of a challenge for me. Who would’ve guessed I’d be missing R so much! Heres some code from one of the first assignments I’ve completed in Python :)
+##Python </description>
+    </item>
+    
+    <item>
+      <title>First Blog Post!</title>
+      <link>/blog/first-blog-post/</link>
+      <pubDate>Fri, 13 Dec 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/first-blog-post/</guid>
+      <description>Hello!</description>
+    </item>
+    
+  </channel>
+</rss>
